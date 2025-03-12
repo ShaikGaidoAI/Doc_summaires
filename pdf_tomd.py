@@ -1,7 +1,12 @@
-pdf_path = "docs\HDFC\HDFC-optima_secure\HDFC-optima_secure_policywordings.pdf" 
-
 import pdfplumber
 import pandas as pd
+import os
+
+pdf_path = "docs/HDFC/HDFC-optima_secure/HDFC-optima_secure_policywordings.pdf"
+output_dir = "md_output"  # Directory to store MD files
+
+# Ensure output directory exists
+os.makedirs(output_dir, exist_ok=True)
 
 def extract_page_content(page, page_num):
     """Extract text and tables in the correct order from a page."""
@@ -27,25 +32,17 @@ def extract_page_content(page, page_num):
     # Return ordered content
     return "\n\n".join(e[1] for e in elements)
 
-def extract_pdf_content(pdf_path):
-    """Extract text and tables in order for the entire PDF."""
-    content = []
+def save_pages_as_markdown(pdf_path, output_dir):
+    """Save each page of the PDF as a separate Markdown file."""
     with pdfplumber.open(pdf_path) as pdf:
         for page_num, page in enumerate(pdf.pages, start=1):
-            content.append(extract_page_content(page, page_num))
+            md_content = extract_page_content(page, page_num)
+            md_filename = os.path.join(output_dir, f"page_{page_num}.md")
 
-    return "\n\n".join(content)
+            with open(md_filename, "w", encoding="utf-8") as md_file:
+                md_file.write(md_content)
 
-def save_to_markdown(pdf_path, md_output_path):
-    """Convert PDF to Markdown while maintaining content order."""
-    md_content = extract_pdf_content(pdf_path)
-
-    with open(md_output_path, "w", encoding="utf-8") as md_file:
-        md_file.write(md_content)
+            print(f"Saved: {md_filename}")
 
 if __name__ == "__main__":
-    pdf_file = pdf_path  # Change this to your PDF file
-    md_file = "output.md"
-
-    save_to_markdown(pdf_file, md_file)
-    print(f"Markdown file saved as {md_file}")
+    save_pages_as_markdown(pdf_path, output_dir)
